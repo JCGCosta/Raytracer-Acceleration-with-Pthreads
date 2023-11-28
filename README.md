@@ -26,7 +26,7 @@ apt-get install ninja-build
 sudo apt-get cmake
 ```
 
-Third you nedd execute the commands a follow:
+Third you need execute the commands a follow:
 
 **To Run (Build, Execute and Show):**
 
