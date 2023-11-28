@@ -4,7 +4,9 @@ For more infos about the project see [practical-work-pthreads](./practical-work-
 
 #### To Run The Serial Version
 
-First you need install some tools:
+First you need extract the `raytracing-serial-1.zip`.
+
+Second you need install some tools:
 
 -   ninja
 -   Cmake    
@@ -21,8 +23,10 @@ apt-get install ninja-build
 ```
 
 ``` bash
-sudo apt-get cmake`
+sudo apt-get cmake
 ```
+
+Third you nedd execute the commands a follow:
 
 **To Run (Build, Execute and Show):**
 

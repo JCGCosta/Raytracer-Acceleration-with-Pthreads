@@ -51,4 +51,4 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# raytracing-serial-1/
+raytracing-serial-1/
