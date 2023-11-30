@@ -19,7 +19,7 @@ sudo apt-get update
 ```
 
 ``` bash
-apt-get install ninja-build
+sudo apt-get install ninja-build
 ```
 
 ``` bash
