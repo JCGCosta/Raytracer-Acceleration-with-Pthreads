@@ -2,7 +2,7 @@
 
 For more infos about the project see [practical-work-pthreads](./practical-work-pthreads.pdf)
 
-#### To Run The Serial Version
+## To Run The Serial Version
 
 First you need extract the `raytracing-serial-1.zip`.
 
