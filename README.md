@@ -49,3 +49,29 @@ ninja
 ``` bash
 xdg-open image.ppm
 ```
+
+## To Analysis the Version using the Valgrind
+
+First you need install the **Valgrind**:
+
+**To install in Ubuntu:**
+
+``` bash
+sudo apt-get install valgrind
+```
+
+Second you need compile and execute with debugging information
+
+**Serial Version:**
+
+Go to the Serial Code Folder and execute these commands:
+
+``` bash
+valgrind --tool=callgrind ./ray_tracing_one_week > image.ppm
+``` 
+
+``` bash
+kcachegrind callgrind.out.PID
+```
+
+**PID**: Is a randon number that represents the Process ID
