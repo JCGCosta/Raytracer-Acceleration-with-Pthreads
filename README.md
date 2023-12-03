@@ -50,7 +50,7 @@ ninja
 xdg-open image.ppm
 ```
 
-## To Analysis the Version using the Valgrind
+## To Analysis the Code using the Valgrind
 
 First you need install the **Valgrind**:
 
