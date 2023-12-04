@@ -1,0 +1,3 @@
+/home/juliocesar/Documents/IPB/AdvancedComputing/Project1_git/raytracer-acceleration-with-pthreads/raytracing-parallel-join-barrier/CMakeFiles/ray_tracing_one_week.dir
+/home/juliocesar/Documents/IPB/AdvancedComputing/Project1_git/raytracer-acceleration-with-pthreads/raytracing-parallel-join-barrier/CMakeFiles/edit_cache.dir
+/home/juliocesar/Documents/IPB/AdvancedComputing/Project1_git/raytracer-acceleration-with-pthreads/raytracing-parallel-join-barrier/CMakeFiles/rebuild_cache.dir
