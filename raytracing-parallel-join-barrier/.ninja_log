@@ -57,3 +57,15 @@
 555	711	1701704890914863021	CMakeFiles/ray_tracing_one_week.dir/scenes/rt_scenes.c.o	a4da5f5b4ccc9f20
 541	1270	1701704891474867301	CMakeFiles/ray_tracing_one_week.dir/textures/rt_texture_image.c.o	e1016b8df4c143ed
 1270	1350	1701704891550867880	ray_tracing_one_week	e84daff24419c801
+1	152	1702421061282061342	CMakeFiles/ray_tracing_one_week.dir/main.c.o	61a3bd7de2d980b5
+152	340	1702421061474055573	ray_tracing_one_week	e84daff24419c801
+1	137	1702421187838700988	CMakeFiles/ray_tracing_one_week.dir/main.c.o	61a3bd7de2d980b5
+137	230	1702421187930698818	ray_tracing_one_week	e84daff24419c801
+1	103	1702421475489086210	CMakeFiles/ray_tracing_one_week.dir/main.c.o	61a3bd7de2d980b5
+103	182	1702421475569084872	ray_tracing_one_week	e84daff24419c801
+1	113	1702421539440040837	CMakeFiles/ray_tracing_one_week.dir/main.c.o	61a3bd7de2d980b5
+114	194	1702421539520039558	ray_tracing_one_week	e84daff24419c801
+1	135	1702421606434989699	CMakeFiles/ray_tracing_one_week.dir/main.c.o	61a3bd7de2d980b5
+135	236	1702421606534988158	ray_tracing_one_week	e84daff24419c801
+1	121	1702424097344040174	CMakeFiles/ray_tracing_one_week.dir/main.c.o	61a3bd7de2d980b5
+121	201	1702424097424049636	ray_tracing_one_week	e84daff24419c801

@@ -17,6 +17,19 @@
 #define NUM_THREADS 3
 #define NUM_SAMPLES 100
 
+// Global reading variables
+int IMAGE_WIDTH_global;
+int IMAGE_HEIGHT_global;
+long number_of_samples_global;
+rt_camera_t *camera_global;
+rt_hittable_list_t *world_global;
+rt_skybox_t *skybox_global;
+int CHILD_RAYS_global;
+
+// Global writing variables
+long thread_flag[NUM_THREADS];
+pthread_mutex_t thread_flag_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static void show_usage(const char *program_name, int err);
 
 static colour_t ray_colour(const ray_t *ray, const rt_hittable_list_t *list, rt_skybox_t *skybox, int child_rays)
@@ -45,39 +58,53 @@ static colour_t ray_colour(const ray_t *ray, const rt_hittable_list_t *list, rt_
 // Changes start here
 
 typedef struct {
-	// args to calculate the ray tracing
-	int IMAGE_WIDTH;
-	int IMAGE_HEIGHT;
-	long number_of_samples;
-	rt_camera_t *camera;
-	rt_hittable_list_t *world;
-	rt_skybox_t *skybox;
-	int CHILD_RAYS;
-	// args to divide the work
+	int thread_id;
 	int cur_line;
 	colour_t *line_res;
 } thread_work;
 
+void set_globals(int IMAGE_WIDTH, int IMAGE_HEIGHT, long number_of_samples, rt_camera_t *camera, rt_hittable_list_t *world, rt_skybox_t *skybox, int CHILD_RAYS)
+{
+	IMAGE_HEIGHT_global = IMAGE_HEIGHT;
+	IMAGE_WIDTH_global = IMAGE_WIDTH;
+	number_of_samples_global = number_of_samples;
+	camera_global = camera;
+	world_global = world;
+	skybox_global = skybox;
+	CHILD_RAYS_global = CHILD_RAYS;
+}
+
+void thread_flag_init(long *thread_flag) 
+{
+	for (int i = 0; i < NUM_THREADS; i++) thread_flag[i] = 0;
+}
+
 void *process_line_thread(void *work)
 {
 	thread_work *cur_work = (thread_work *)work;
-	colour_t *local_work_res = (colour_t *)malloc(cur_work->IMAGE_WIDTH * sizeof(colour_t));
+	colour_t *local_work_res = (colour_t *)malloc(IMAGE_WIDTH_global * sizeof(colour_t));
 	
-	for (int i = 0; i < cur_work->IMAGE_WIDTH; ++i)
+	for (int i = 0; i < IMAGE_WIDTH_global; ++i)
         {
 		colour_t pixel = colour(0, 0, 0);
-		for (int s = 0; s < cur_work->number_of_samples; ++s)
+		for (int s = 0; s < number_of_samples_global; ++s)
 		{
-			double u = (double)(i + rt_random_double(0, 1)) / (cur_work->IMAGE_WIDTH - 1);
-			double v = (double)(cur_work->cur_line + rt_random_double(0, 1)) / (cur_work->IMAGE_HEIGHT - 1);
+			double u = (double)(i + rt_random_double(0, 1)) / (IMAGE_WIDTH_global - 1);
+			double v = (double)(cur_work->cur_line + rt_random_double(0, 1)) / (IMAGE_HEIGHT_global - 1);
 
-			ray_t ray = rt_camera_get_ray(cur_work->camera, u, v);
-			vec3_add(&pixel, ray_colour(&ray, cur_work->world, cur_work->skybox, cur_work->CHILD_RAYS));
+			ray_t ray = rt_camera_get_ray(camera_global, u, v);
+			vec3_add(&pixel, ray_colour(&ray, world_global, skybox_global, CHILD_RAYS_global));
 		}
 		local_work_res[i] = pixel;
 	}
 	
 	cur_work->line_res = local_work_res;
+	
+	// Preventing false sharing problem
+	pthread_mutex_lock(&thread_flag_mutex);
+	thread_flag[cur_work->thread_id] = 0;
+	pthread_mutex_unlock(&thread_flag_mutex);
+	
 	pthread_exit(NULL);
 }
 
@@ -89,52 +116,61 @@ void despatch_line(const int IMAGE_WIDTH, colour_t *line_res, FILE *out_file, lo
 	}
 }
 
+bool has_work_already()
+{
+	for (int t = 0; t < NUM_THREADS; ++t)
+	{
+		if (thread_flag[t] == 1) return true;
+	}
+	return false;
+}
+
 void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_samples, rt_camera_t *camera, rt_hittable_list_t *world, rt_skybox_t *skybox, const int CHILD_RAYS, FILE *out_file)
 {
 	// Initial setup
-	long cur_line = IMAGE_HEIGHT-1;
 	pthread_t threads[NUM_THREADS];
-	int num_workers = 0;
+	long cur_line = IMAGE_HEIGHT-1; // (image height = 200) (vectors go from 0 to 199)
 	
-	// Until reachs the image end
-	while (cur_line > 0)
+	// Start global variables and the thread_flag with 0
+	set_globals(IMAGE_WIDTH, IMAGE_HEIGHT, number_of_samples, camera, world, skybox, CHILD_RAYS);
+	thread_flag_init(thread_flag);
+	
+	// Work vector for the threads to delivery the results
+	thread_work *work = (thread_work *)malloc(IMAGE_HEIGHT * sizeof(thread_work));
+	work[0].line_res = NULL;
+	
+	// Until reach the image end
+	while (work[0].line_res == NULL)
 	{
 		fprintf(stderr, "\rLines remaining: %ld  ", cur_line+1);
-		num_workers = 0;
-		thread_work *work = (thread_work *)malloc(NUM_THREADS * sizeof(thread_work));
-		
-		// Create the threads
-		for (int t = 0; t < NUM_THREADS; ++t)
-		{
-			// Verify if still have work to be done
-			if (cur_line >= 0)
-			{
-				work[t].IMAGE_WIDTH = IMAGE_WIDTH;
-				work[t].IMAGE_HEIGHT = IMAGE_HEIGHT;
-				work[t].number_of_samples = number_of_samples;
-				work[t].camera = camera;
-				work[t].world = world;
-				work[t].skybox = skybox;
-				work[t].CHILD_RAYS = CHILD_RAYS;
-				
-				work[t].cur_line = cur_line;
-				work[t].line_res = NULL;
-				
-				pthread_create(&threads[t], NULL, &process_line_thread, (void *)&work[t]);
-				cur_line--;
-				num_workers++;
-			}
-		}
-
-		// Collect results and despatch it
-		for (int t = 0; t < num_workers; ++t)
-		{
-			pthread_join(threads[t], NULL);
-			despatch_line(IMAGE_WIDTH, work[t].line_res, out_file, number_of_samples);
-		}
-
-		free(work);
 		fflush(stderr);
+		for (int t = 0; t < NUM_THREADS; ++t)
+		{			
+			if (thread_flag[t] == 0 && cur_line >= 0)
+			{
+				pthread_mutex_lock(&thread_flag_mutex);
+				thread_flag[t] = 1; // Flag says that the current thread is busy
+				pthread_mutex_unlock(&thread_flag_mutex);
+				
+				work[cur_line].thread_id = t;
+				work[cur_line].cur_line = cur_line;
+				work[cur_line].line_res = NULL;
+				
+				pthread_create(&threads[t], NULL, &process_line_thread, (void *)&work[cur_line]);
+				cur_line--;
+			}
+		}	
+	}
+	
+	// All threads finished their work
+	while(has_work_already());
+	
+	// Dispatch work to the file	
+	for (int l = IMAGE_HEIGHT-1; l >= 0; --l)
+	{
+		fprintf(stderr, "\rDispatching: %d", l);
+		fflush(stderr);
+		despatch_line(IMAGE_WIDTH, work[l].line_res, out_file, number_of_samples_global);
 	}
 }
 
@@ -146,7 +182,6 @@ int main(int argc, char const *argv[])
     const char *scene_id_str = NULL;
     const char *file_name = NULL;
     bool verbose = false;
-    //pthread_exit(NULL);
     // Parse console arguments
     for (int i = 1; i < argc; ++i)
     {
@@ -357,7 +392,7 @@ int main(int argc, char const *argv[])
     // Render    
     fprintf(out_file, "P3\n%d %d\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
     render(IMAGE_WIDTH, IMAGE_HEIGHT, number_of_samples, camera, world, skybox, CHILD_RAYS, out_file);
-    fprintf(stderr, "\nDone\n");
+    fprintf(stderr, "\nDone.\n");
 cleanup:
     // Cleanup
     rt_hittable_list_deinit(world);
