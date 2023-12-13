@@ -74,8 +74,8 @@ void *process_n_lines_per_thread(void *args)
 
     for (int j = thread->begin; j >= thread->end; --j)
     {
-        // fprintf(stderr, "\rThead %d: lines remaining: %d\n", thread->tid, j);
-        // fflush(stderr);
+        fprintf(stderr, "\rThread %d: lines remaining: %d\n", thread->tid, (j - thread->end + 1));
+        fflush(stderr);
                 
         thread_return->pixel_matrix[thread->begin - j] = (colour_t *)malloc(sizeof(colour_t) * GLOBAL_IMAGE_WIDTH);
         
@@ -94,7 +94,7 @@ void *process_n_lines_per_thread(void *args)
         }
     }
     
-    fprintf("\rThead %d: DONE", thread->tid);        
+    fprintf(stderr, "\rThead %d: DONE\n", thread->tid);        
 
     pthread_exit(thread_return);
 }
