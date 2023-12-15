@@ -74,8 +74,8 @@ void *process_n_lines_per_thread(void *args)
 
     for (int j = thread->begin; j >= thread->end; --j)
     {
-        fprintf(stderr, "\rThread %d: lines remaining: %d\n", thread->tid, (j - thread->end + 1));
-        fflush(stderr);
+        // fprintf(stderr, "\rThread %d: lines remaining: %d\n", thread->tid, (j - thread->end + 1));
+        // fflush(stderr);
                 
         thread_return->pixel_matrix[thread->begin - j] = (colour_t *)malloc(sizeof(colour_t) * GLOBAL_IMAGE_WIDTH);
         
@@ -90,12 +90,13 @@ void *process_n_lines_per_thread(void *args)
                 ray_t ray = rt_camera_get_ray(GLOBAL_CAMERA, u, v);
                 vec3_add(&pixel, ray_colour(&ray, GLOBAL_WORLD, GLOBAL_SKYBOX, GLOBAL_CHILD_RAYS));
             }
+            
             thread_return->pixel_matrix[thread->begin - j][i] = pixel;
         }
     }
     
-    fprintf(stderr, "\rThead %d: DONE\n", thread->tid);        
-
+    // fprintf(stderr, "\rThead %d: DONE\n", thread->tid);
+            
     pthread_exit(thread_return);
 }
 
@@ -169,11 +170,16 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
             for (int j = 0; j < IMAGE_WIDTH; j++)
             {
                 rt_write_colour(out_file, thread_result->pixel_matrix[i][j], number_of_samples);
-            }            
+            }
+            
+            free(thread_result->pixel_matrix[i]);                        
         }
 
+        free(thread_result->pixel_matrix);
         free(thread_result);
     }
+    
+    free(work_thread_list);
 
     pthread_exit(NULL);
 }
