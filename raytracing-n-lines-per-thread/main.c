@@ -16,6 +16,8 @@
 #include <assert.h>
 
 #define NUM_THREADS 8
+#define NUMBER_OF_MACHINE_BYTES 64
+
 
 typedef struct
 {
@@ -67,10 +69,23 @@ void *process_n_lines_per_thread(void *args)
 {
 
     thread_n_lines_of_work *thread = (thread_n_lines_of_work *)args;
-    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return));
-
+    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * 4);    
+    
+    int real_size;
     thread_return->size = thread->begin - thread->end + 1;
-    thread_return->pixel_matrix = (colour_t **)malloc(sizeof(colour_t *) * thread_return->size);
+
+    int remainder = (sizeof(colour_t *) * thread_return->size) % 64;
+
+    if (remainder == 0)
+    {
+        real_size = sizeof(colour_t *) * thread_return->size;
+    } 
+    else
+    {
+        real_size = sizeof(colour_t *) * thread_return->size + NUMBER_OF_MACHINE_BYTES - remainder;
+    }
+
+    thread_return->pixel_matrix = (colour_t **)malloc(real_size);    
 
     for (int j = thread->begin; j >= thread->end; --j)
     {
