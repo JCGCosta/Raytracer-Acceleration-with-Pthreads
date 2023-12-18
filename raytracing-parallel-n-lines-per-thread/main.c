@@ -64,46 +64,62 @@ static colour_t ray_colour(const ray_t *ray, const rt_hittable_list_t *list, rt_
     return emitted;
 }
 
-void *process_n_lines_per_thread(void *args)
+int get_height_real_size(int size_height)
 {
-
-    thread_n_lines_of_work *thread = (thread_n_lines_of_work *)args;
-    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * 4);
-
-    thread_return->size = thread->begin - thread->end + 1;
-
     int height_real_size;
-    int height_remainder = (sizeof(colour_t *) * thread_return->size) % NUMBER_OF_MACHINE_BYTES;
+    int height_remainder = (sizeof(colour_t *) * size_height) % NUMBER_OF_MACHINE_BYTES;
 
     if (height_remainder == 0)
     {
-        height_real_size = sizeof(colour_t *) * thread_return->size;
+        height_real_size = sizeof(colour_t *) * size_height;
     }
     else
     {
-        height_real_size = (sizeof(colour_t *) * thread_return->size) + NUMBER_OF_MACHINE_BYTES - height_remainder;
+        height_real_size = (sizeof(colour_t *) * size_height) + NUMBER_OF_MACHINE_BYTES - height_remainder;
     }
+
+    return height_real_size;
+}
+
+int get_width_real_size()
+{
+    int width_real_size;
+    int width_remainder = (sizeof(colour_t) * GLOBAL_IMAGE_WIDTH) % NUMBER_OF_MACHINE_BYTES;
+
+    if (width_remainder == 0)
+    {
+        width_real_size = GLOBAL_IMAGE_WIDTH;
+    }
+    else
+    {
+        width_real_size = (sizeof(colour_t) * GLOBAL_IMAGE_WIDTH) + NUMBER_OF_MACHINE_BYTES - width_remainder;
+    }
+
+    return width_real_size;
+}
+
+void *process_n_lines_per_thread(void *args)
+{
+    thread_n_lines_of_work *thread = (thread_n_lines_of_work *)args;
+    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * 4);
+
+    int begin = thread->begin;
+    int end = thread->end;
+
+    thread_return->size = begin - end + 1;    
+
+    int height_real_size = get_height_real_size(thread_return->size);
 
     thread_return->pixel_matrix = (colour_t **)malloc(height_real_size);
 
-    int widht_real_size;
-    int widht_remainder = (sizeof(colour_t) * GLOBAL_IMAGE_WIDTH) % NUMBER_OF_MACHINE_BYTES;
+    int width_real_size = get_width_real_size();
 
-    if (widht_remainder == 0)
-    {
-        widht_real_size = GLOBAL_IMAGE_WIDTH;
-    }
-    else
-    {
-        widht_real_size = (sizeof(colour_t) * GLOBAL_IMAGE_WIDTH) + NUMBER_OF_MACHINE_BYTES - widht_remainder;
-    }
-
-    for (int j = thread->begin; j >= thread->end; --j)
+    for (int j = begin; j >= end; --j)
     {
         // fprintf(stderr, "\rThread %d: lines remaining: %d\n", thread->tid, (j - thread->end + 1));
         // fflush(stderr);
 
-        thread_return->pixel_matrix[thread->begin - j] = (colour_t *)malloc(widht_real_size);
+        thread_return->pixel_matrix[begin - j] = (colour_t *)malloc(width_real_size);
 
         for (int i = 0; i < GLOBAL_IMAGE_WIDTH; ++i)
         {
@@ -117,7 +133,7 @@ void *process_n_lines_per_thread(void *args)
                 vec3_add(&pixel, ray_colour(&ray, GLOBAL_WORLD, GLOBAL_SKYBOX, GLOBAL_CHILD_RAYS));
             }
 
-            thread_return->pixel_matrix[thread->begin - j][i] = pixel;
+            thread_return->pixel_matrix[begin - j][i] = pixel;
         }
     }
 
@@ -126,7 +142,7 @@ void *process_n_lines_per_thread(void *args)
     pthread_exit(thread_return);
 }
 
-void setGLOBALS(const int IMAGE_HEIGHT, const int IMAGE_WIDTH, long number_of_samples, rt_camera_t *camera,
+void set_GLOBALS(const int IMAGE_HEIGHT, const int IMAGE_WIDTH, long number_of_samples, rt_camera_t *camera,
                 rt_hittable_list_t *world, rt_skybox_t *skybox, const int CHILD_RAYS)
 {
     GLOBAL_IMAGE_HEIGHT = IMAGE_HEIGHT;
@@ -142,7 +158,7 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
             rt_hittable_list_t *world, rt_skybox_t *skybox, const int CHILD_RAYS, FILE *out_file)
 {
 
-    setGLOBALS(IMAGE_HEIGHT, IMAGE_WIDTH, number_of_samples, camera, world, skybox, CHILD_RAYS);
+    set_GLOBALS(IMAGE_HEIGHT, IMAGE_WIDTH, number_of_samples, camera, world, skybox, CHILD_RAYS);
 
     pthread_t thread_list[NUM_THREADS];
     thread_n_lines_of_work *work_thread_list =
