@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
+#include <time.h>
 
 #ifdef M_PI
 #define PI M_PI
@@ -22,7 +23,8 @@
 
 static inline double rt_random_double(double min, double max)
 {
-    return min + (max - min) * rand() / (RAND_MAX + 1.0);
+    static unsigned int seed; 
+    return min + (max - min) * rand_r(&seed) / (RAND_MAX + 1.0);
 }
 
 static inline double rt_clamp(double x, double min, double max)

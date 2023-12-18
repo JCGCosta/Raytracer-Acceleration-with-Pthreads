@@ -14,7 +14,7 @@
 #include <string.h>
 #include <scenes/rt_scenes.h>
 #include <assert.h>
-#define NUM_THREADS 3
+#define NUM_THREADS 4
 #define NUM_SAMPLES 100
 
 static void show_usage(const char *program_name, int err);
