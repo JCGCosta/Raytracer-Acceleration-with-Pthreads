@@ -101,7 +101,7 @@ int get_width_real_size()
 void *process_n_lines_per_thread(void *args)
 {
     thread_n_lines_of_work *thread = (thread_n_lines_of_work *)args;
-    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * 4);
+    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * (NUMBER_OF_MACHINE_BYTES/16));
 
     int begin = thread->begin;
     int end = thread->end;
