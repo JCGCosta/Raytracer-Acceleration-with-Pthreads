@@ -1,3 +1,0 @@
-/home/waldyr/Desktop/raytracer-acceleration-with-pthreads/raytracing-n-lines-per-thread/CMakeFiles/ray_tracing_one_week.dir
-/home/waldyr/Desktop/raytracer-acceleration-with-pthreads/raytracing-n-lines-per-thread/CMakeFiles/edit_cache.dir
-/home/waldyr/Desktop/raytracer-acceleration-with-pthreads/raytracing-n-lines-per-thread/CMakeFiles/rebuild_cache.dir
