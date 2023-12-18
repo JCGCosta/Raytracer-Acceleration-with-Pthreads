@@ -14,8 +14,7 @@
 #include <string.h>
 #include <scenes/rt_scenes.h>
 #include <assert.h>
-#define NUM_THREADS 4
-#define NUM_SAMPLES 100
+#define NUM_THREADS 8
 
 static void show_usage(const char *program_name, int err);
 
@@ -99,7 +98,6 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
 	// Until reachs the image end
 	while (cur_line > 0)
 	{
-		fprintf(stderr, "\rLines remaining: %ld  ", cur_line+1);
 		num_workers = 0;
 		thread_work *work = (thread_work *)malloc(NUM_THREADS * sizeof(thread_work));
 		
@@ -134,7 +132,6 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
 		}
 
 		free(work);
-		fflush(stderr);
 	}
 }
 
@@ -200,7 +197,7 @@ int main(int argc, char const *argv[])
     }
 
     // Parse resulting parameters
-    long number_of_samples = NUM_SAMPLES;
+    long number_of_samples = 1000;
     if (NULL != number_of_samples_str)
     {
         char *end_ptr = NULL;
@@ -357,7 +354,7 @@ int main(int argc, char const *argv[])
     // Render    
     fprintf(out_file, "P3\n%d %d\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
     render(IMAGE_WIDTH, IMAGE_HEIGHT, number_of_samples, camera, world, skybox, CHILD_RAYS, out_file);
-    fprintf(stderr, "\nDone\n");
+
 cleanup:
     // Cleanup
     rt_hittable_list_deinit(world);

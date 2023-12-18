@@ -14,8 +14,7 @@
 #include <string.h>
 #include <scenes/rt_scenes.h>
 #include <assert.h>
-#define NUM_THREADS 3
-#define NUM_SAMPLES 100
+#define NUM_THREADS 8
 
 // Global reading variables
 int IMAGE_WIDTH_global;
@@ -142,8 +141,6 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
 	// Until reach the image end
 	while (work[0].line_res == NULL)
 	{
-		fprintf(stderr, "\rLines remaining: %ld  ", cur_line+1);
-		fflush(stderr);
 		for (int t = 0; t < NUM_THREADS; ++t)
 		{			
 			if (thread_flag[t] == 0 && cur_line >= 0)
@@ -168,8 +165,6 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
 	// Dispatch work to the file	
 	for (int l = IMAGE_HEIGHT-1; l >= 0; --l)
 	{
-		fprintf(stderr, "\rDispatching: %d", l);
-		fflush(stderr);
 		despatch_line(IMAGE_WIDTH, work[l].line_res, out_file, number_of_samples_global);
 	}
 }
@@ -235,7 +230,7 @@ int main(int argc, char const *argv[])
     }
 
     // Parse resulting parameters
-    long number_of_samples = NUM_SAMPLES;
+    long number_of_samples = 1000;
     if (NULL != number_of_samples_str)
     {
         char *end_ptr = NULL;
@@ -392,7 +387,7 @@ int main(int argc, char const *argv[])
     // Render    
     fprintf(out_file, "P3\n%d %d\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
     render(IMAGE_WIDTH, IMAGE_HEIGHT, number_of_samples, camera, world, skybox, CHILD_RAYS, out_file);
-    fprintf(stderr, "\nDone.\n");
+
 cleanup:
     // Cleanup
     rt_hittable_list_deinit(world);
