@@ -14,9 +14,9 @@ endif ()
 find_package( Threads )
 
 #use these options for profiling with valgrind
-SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-pthread -O0 -g")
+#SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-pthread -O0 -g")
 #use these options for benchmarking
-#SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-pthread -O2")
+SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-pthread -O2")
 
 add_executable(ray_tracing_one_week rt_camera.c rt_colour.c rt_aabb.c rt_perlin.c rt_skybox_simple.c
                # Materials
