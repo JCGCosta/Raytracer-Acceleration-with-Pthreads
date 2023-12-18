@@ -18,7 +18,6 @@
 #define NUM_THREADS 8
 #define NUMBER_OF_MACHINE_BYTES 64
 
-
 typedef struct
 {
     int tid;
@@ -69,33 +68,45 @@ void *process_n_lines_per_thread(void *args)
 {
 
     thread_n_lines_of_work *thread = (thread_n_lines_of_work *)args;
-    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * 4);    
-    
-    int real_size;
+    thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * 4);
+
     thread_return->size = thread->begin - thread->end + 1;
 
-    int remainder = (sizeof(colour_t *) * thread_return->size) % 64;
+    int height_real_size;
+    int height_remainder = (sizeof(colour_t *) * thread_return->size) % NUMBER_OF_MACHINE_BYTES;
 
-    if (remainder == 0)
+    if (height_remainder == 0)
     {
-        real_size = sizeof(colour_t *) * thread_return->size;
-    } 
+        height_real_size = sizeof(colour_t *) * thread_return->size;
+    }
     else
     {
-        real_size = sizeof(colour_t *) * thread_return->size + NUMBER_OF_MACHINE_BYTES - remainder;
+        height_real_size = (sizeof(colour_t *) * thread_return->size) + NUMBER_OF_MACHINE_BYTES - height_remainder;
     }
 
-    thread_return->pixel_matrix = (colour_t **)malloc(real_size);    
+    thread_return->pixel_matrix = (colour_t **)malloc(height_real_size);
+
+    int widht_real_size;
+    int widht_remainder = (sizeof(colour_t) * GLOBAL_IMAGE_WIDTH) % NUMBER_OF_MACHINE_BYTES;
+
+    if (widht_remainder == 0)
+    {
+        widht_real_size = GLOBAL_IMAGE_WIDTH;
+    }
+    else
+    {
+        widht_real_size = (sizeof(colour_t) * GLOBAL_IMAGE_WIDTH) + NUMBER_OF_MACHINE_BYTES - widht_remainder;
+    }
 
     for (int j = thread->begin; j >= thread->end; --j)
     {
         // fprintf(stderr, "\rThread %d: lines remaining: %d\n", thread->tid, (j - thread->end + 1));
         // fflush(stderr);
-                
-        thread_return->pixel_matrix[thread->begin - j] = (colour_t *)malloc(sizeof(colour_t) * GLOBAL_IMAGE_WIDTH);
-        
+
+        thread_return->pixel_matrix[thread->begin - j] = (colour_t *)malloc(widht_real_size);
+
         for (int i = 0; i < GLOBAL_IMAGE_WIDTH; ++i)
-        {            
+        {
             colour_t pixel = colour(0, 0, 0);
             for (int s = 0; s < GLOBAL_NUMBER_OF_SAMPLES; ++s)
             {
@@ -105,13 +116,13 @@ void *process_n_lines_per_thread(void *args)
                 ray_t ray = rt_camera_get_ray(GLOBAL_CAMERA, u, v);
                 vec3_add(&pixel, ray_colour(&ray, GLOBAL_WORLD, GLOBAL_SKYBOX, GLOBAL_CHILD_RAYS));
             }
-            
+
             thread_return->pixel_matrix[thread->begin - j][i] = pixel;
         }
     }
-    
+
     // fprintf(stderr, "\rThead %d: DONE\n", thread->tid);
-            
+
     pthread_exit(thread_return);
 }
 
@@ -166,7 +177,7 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
     }
 
     int ret;
-    void* result;
+    void *result;
     thread_work_return *thread_result;
 
     for (int t = 0; t < NUM_THREADS; t++)
@@ -178,22 +189,22 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
             exit(ret);
         }
 
-        thread_result = (thread_work_return*) result;
+        thread_result = (thread_work_return *)result;
 
-        for(int i = 0; i < thread_result->size; i++)
+        for (int i = 0; i < thread_result->size; i++)
         {
             for (int j = 0; j < IMAGE_WIDTH; j++)
             {
                 rt_write_colour(out_file, thread_result->pixel_matrix[i][j], number_of_samples);
             }
-            
-            free(thread_result->pixel_matrix[i]);                        
+
+            free(thread_result->pixel_matrix[i]);
         }
 
         free(thread_result->pixel_matrix);
         free(thread_result);
     }
-    
+
     free(work_thread_list);
 
     pthread_exit(NULL);
@@ -422,7 +433,7 @@ cleanup:
     // Cleanup
     rt_hittable_list_deinit(world);
     rt_camera_delete(camera);
-    rt_skybox_delete(skybox);    
+    rt_skybox_delete(skybox);
 
     return EXIT_SUCCESS;
 }
