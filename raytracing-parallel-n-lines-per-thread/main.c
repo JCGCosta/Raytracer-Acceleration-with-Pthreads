@@ -103,6 +103,7 @@ void *process_n_lines_per_thread(void *args)
     thread_n_lines_of_work *thread = (thread_n_lines_of_work *)args;
     thread_work_return *thread_return = (thread_work_return *)malloc(sizeof(thread_work_return) * (NUMBER_OF_MACHINE_BYTES/16));
 
+    int tid = thread->tid;
     int begin = thread->begin;
     int end = thread->end;
 
@@ -116,7 +117,7 @@ void *process_n_lines_per_thread(void *args)
 
     for (int j = begin; j >= end; --j)
     {
-        // fprintf(stderr, "\rThread %d: lines remaining: %d\n", thread->tid, (j - thread->end + 1));
+        // fprintf(stderr, "\rThread %d: lines remaining: %d\n", tid, (j - end + 1));
         // fflush(stderr);
 
         thread_return->pixel_matrix[begin - j] = (colour_t *)malloc(width_real_size);
@@ -137,7 +138,7 @@ void *process_n_lines_per_thread(void *args)
         }
     }
 
-    // fprintf(stderr, "\rThead %d: DONE\n", thread->tid);
+    // fprintf(stderr, "\rThead %d: DONE\n", tid);
 
     pthread_exit(thread_return);
 }
