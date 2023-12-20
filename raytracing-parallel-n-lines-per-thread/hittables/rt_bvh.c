@@ -40,7 +40,10 @@ static rt_hittable_t *bvh_make_node(rt_hittable_t **hittable_array, size_t start
     assert(NULL != result);
 
     size_t number_of_objects = end - start;
-    int axis = rand() % 3;
+
+    static unsigned int seed;
+    int axis = rand_r(&seed) % 3;
+
     rt_hittable_compare_fn cmp = rt_hittable_box_cmp_x;
     if (axis == 1)
     {

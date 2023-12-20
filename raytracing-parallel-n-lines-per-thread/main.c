@@ -138,7 +138,7 @@ void *process_n_lines_per_thread(void *args)
         }
     }
 
-    fprintf(stderr, "\rThead %d: DONE\n", tid);
+    // fprintf(stderr, "\rThead %d: DONE\n", tid);
 
     pthread_exit(thread_return);
 }

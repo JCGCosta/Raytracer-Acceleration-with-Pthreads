@@ -126,9 +126,11 @@ static void permutate(int *array, size_t size)
 {
     assert(NULL != array);
 
+    static unsigned int seed;
+
     for (int i = 0; i < size; ++i)
     {
-        int target = i + rand() % (size - i);
+        int target = i + rand_r(&seed) % (size - i);
         int tmp = array[i];
         array[i] = array[target];
         array[target] = tmp;
