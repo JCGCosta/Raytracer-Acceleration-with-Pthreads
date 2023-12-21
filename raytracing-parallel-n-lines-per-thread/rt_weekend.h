@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
+#include <pthread.h>
 
 #ifdef M_PI
 #define PI M_PI
@@ -22,8 +23,8 @@
 
 static inline double rt_random_double(double min, double max)
 {
-    static unsigned int seed;   
-    return min + (max - min) * rand_r(&seed) / (RAND_MAX + 1.0);
+    static unsigned int dummy=0; if (dummy==0) dummy=pthread_self();    
+    return min + (max - min) * rand_r(&dummy) / (RAND_MAX + 1.0);
     
     // return min + (max - min) * rand() / (RAND_MAX + 1.0);
 }

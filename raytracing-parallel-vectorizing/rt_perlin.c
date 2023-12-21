@@ -7,6 +7,7 @@
 #include <assert.h>
 #include "rt_perlin.h"
 #include "rt_colour.h"
+#include <pthread.h>
 
 struct rt_perlin_s
 {
@@ -124,11 +125,13 @@ static int *generate_permutation(size_t size)
 
 static void permutate(int *array, size_t size)
 {
+    static unsigned int dummy=0; if (dummy==0) dummy=pthread_self();
+
     assert(NULL != array);
 
     for (int i = 0; i < size; ++i)
     {
-        int target = i + rand() % (size - i);
+        int target = i + rand_r(&dummy) % (size - i);
         int tmp = array[i];
         array[i] = array[target];
         array[target] = tmp;

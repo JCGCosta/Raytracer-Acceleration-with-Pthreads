@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "rt_scenes.h": "c"
+        "rt_scenes.h": "c",
+        "rt_colour.h": "c",
+        "pthread.h": "c"
     }
 }

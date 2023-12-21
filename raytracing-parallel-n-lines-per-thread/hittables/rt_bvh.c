@@ -7,6 +7,7 @@
 #include <assert.h>
 #include "rt_bvh.h"
 #include "rt_hittable_shared.h"
+#include <pthread.h>
 
 typedef struct rt_bvh_node_s
 {
@@ -33,7 +34,9 @@ rt_hittable_t *rt_bvh_node_new(const rt_hittable_list_t *hittable_list, double t
 
 static rt_hittable_t *bvh_make_node(rt_hittable_t **hittable_array, size_t start, size_t end, double time0,
                                     double time1)
-{
+{    
+    static unsigned int dummy=0; if (dummy==0) dummy=pthread_self();
+    
     assert(NULL != hittable_array);
 
     rt_bvh_node_t *result = calloc(1, sizeof(rt_bvh_node_t));
@@ -41,8 +44,9 @@ static rt_hittable_t *bvh_make_node(rt_hittable_t **hittable_array, size_t start
 
     size_t number_of_objects = end - start;
 
-    static unsigned int seed;
-    int axis = rand_r(&seed) % 3;
+    int axis = rand_r(&dummy) % 3;
+
+    //int axis = rand() % 3;
 
     rt_hittable_compare_fn cmp = rt_hittable_box_cmp_x;
     if (axis == 1)
