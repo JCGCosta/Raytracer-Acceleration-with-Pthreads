@@ -14,7 +14,8 @@
 #include <string.h>
 #include <scenes/rt_scenes.h>
 #include <assert.h>
-#define NUM_THREADS 8
+#include <time.h>
+#define NUM_THREADS 3
 
 // Global reading variables
 int IMAGE_WIDTH_global;
@@ -141,6 +142,9 @@ void render(const int IMAGE_WIDTH, const int IMAGE_HEIGHT, long number_of_sample
 	// Until reach the image end
 	while (work[0].line_res == NULL)
 	{
+		// To prevent thread starvation
+		// 500000000L = 0.5 seconds
+		nanosleep((const struct timespec[]){{0, 500L}}, NULL);
 		for (int t = 0; t < NUM_THREADS; ++t)
 		{			
 			if (thread_flag[t] == 0 && cur_line >= 0)
